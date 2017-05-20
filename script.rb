@@ -87,12 +87,12 @@ colors.each do |color|
 
 100.times do |i|
 offset = i*50
-url = "http://api.shopstyle.com/api/v2/products?pid=uid5201-35972399-51&fts=#{color}&offset=#{offset}&limit=50"
+url = "http://api.shopstyle.com/api/v2/products?pid=uid5201-35972399-51&fts=#{color}+shoes&offset=#{offset}&limit=50"
 products = JSON.parse(open(url).read())["products"]
 
 products.each do |product|
 p = Product.new(name: product["name"], category: product["category"], unbranded_name: product["unbrandedName"],retailer: product["retailer"], currency: product["currency"], price: product["price"], brand: product["brand"], description: product["description"], img: product["image"]["sizes"]["Original"]["url"], thumbnail: product["image"]["sizes"]["IPhoneSmall"]["url"], raw_xml: product.to_s)
-if (not p.brand.nil? and p.brand[0] == '{')
+if (not p.brand.nil? and p.brand[0] == '{' and not product.to_s.include?("preOwned\"=>true") and not product.to_s.include?("rental\"=>true"))
 p.brand = JSON.parse(p.brand.gsub(%r{\ }, '').gsub(%r{=>}, ':'))["name"]
 p.retailer = JSON.parse(p.retailer.gsub(%r{\ }, '').gsub(%r{=>}, ':'))["name"]
 p.category = JSON.parse(p.raw_xml.gsub(%r{\ }, '').gsub(%r{=>}, ':'))["categories"][0]["name"]
@@ -280,6 +280,7 @@ Dir.new('.').each {|file|
 }
 end
 
+shoes = ["Adidas Kampung","Ballet shoe","Pointe shoe","Bast shoe","Blucher shoe","Boat shoe","Brogan","Brogue shoe","Brothel creeper","Bucks","Calceology","Cantabrian albarcas","Chopine","Climbing shoe","Clog","Court shoe","Cross country running shoe","Derby shoe","Diabetic shoe","Dori shoes","Dress shoe","Driving moccasins","Earth shoe","Elevator shoes","Espadrille","Fashion boot","Galesh","Giveh","High-heeled ","Venetian loafers","Huarache","Jazz shoe","Jelly shoes","Jumpsoles","Jutti","Kitten heel","Kolhapuri Chappal","Kung fu shoe","Loafers","Lotus shoes","Mary Jane","Mojari","Moccasin","Monk shoe","Mule","Opanak","Opinga","Organ shoes","Over-the-knee boot","Oxford shoe","Pampootie","Peranakan beaded slippers","Peshawari chappal","Platform shoe","Pointed shoe","Pointinini","Rocker bottom shoe","Ruby slippers","Russian boot","Saddle shoe","Sandal","Toe Shoe","Silver Shoes","Slip-on shoe","Slipper","Sneakers","Snow boot","Spectator shoe","Steel-toe boot","T-bar sandal","Tiger-head shoes","Toe shoe","Tsarouhi","Turnshoe","Venetian-style shoe","Winklepicker"]
 
 #Stratified sampling script
 require 'json'
@@ -295,14 +296,14 @@ p.retailer = JSON.parse(p.retailer.gsub(%r{\ }, '').gsub(%r{=>}, ':'))["name"]
 p.category = JSON.parse(p.raw_xml.gsub(%r{\ }, '').gsub(%r{=>}, ':'))["categories"][0]["name"]
 p.shopstyle_id = JSON.parse(p.raw_xml.gsub(%r{\ }, '').gsub(%r{=>}, ':'))["id"]
 
-if p.raw_xml.include?("Men's")
-p.gender_male = true
-p.gender_female = false
-elsif p.raw_xml.include?("Women's")
-p.gender_female = true
-p.gender_male = false
-else
-end
+#if p.raw_xml.include?("Men's")
+#p.gender_male = true
+#p.gender_female = false
+#elsif p.raw_xml.include?("Women's")
+#p.gender_female = true
+#p.gender_male = false
+#else
+#end
 
 filename = "thumbnails/#{p.category}/#{p.shopstyle_id}.jpg"
 if not File.file?(filename)
@@ -334,7 +335,7 @@ colors = stratified_sampling.collect{|row| row[2]}.compact
 styles.each do |style|
 colors.each do |color|
 
-url = "http://api.shopstyle.com/api/v2/products?pid=uid5201-35972399-51&fts=+mens+#{name}+#{style}+#{color}&limit=50"
+url = "http://api.shopstyle.com/api/v2/products?pid=uid5201-35972399-51&fts=+womens+#{name}+#{style}+#{color}&limit=50"
 begin
 products = JSON.parse(open(url).read())["products"]
 extract(products)
@@ -345,7 +346,7 @@ end
 end
 
 details.each do |style|
-url = "http://api.shopstyle.com/api/v2/products?pid=uid5201-35972399-51&fts=+mens+#{name}+#{details}&limit=50"
+url = "http://api.shopstyle.com/api/v2/products?pid=uid5201-35972399-51&fts=+womens+#{name}+#{details}&limit=50"
 begin
 products = JSON.parse(open(url).read())["products"]
 extract(products)
@@ -369,6 +370,8 @@ keywords = ["rugby shirt", "henley shirt", "kurta shirt",
 	"chelsea boots", "monk strap shoes", "brouge", "desert shoes", "boat shoes", "cowboy boots", 
 	"longwings", "wingtips", "wholecuts", 	"high tops", "low tops", "chukka"]
 
+keywords = ["shoes", "boots"]
+
 keywords.each do |keyword|
 10.times do |i|
 offset = i*50 
@@ -377,20 +380,12 @@ products = JSON.parse(open(url).read())["products"]
 
 products.each do |product|
 p = Product.new(name: product["name"], category: product["category"], unbranded_name: product["unbrandedName"],retailer: product["retailer"], currency: product["currency"], price: product["price"], brand: product["brand"], description: product["description"], img: product["image"]["sizes"]["Original"]["url"], thumbnail: product["image"]["sizes"]["IPhoneSmall"]["url"], raw_xml: product.to_s)
-if (not p.brand.nil? and p.brand[0] == '{')
+if (not p.brand.nil? and p.brand[0] == '{' and not product.to_s.include?("preOwned\"=>true") and not product.to_s.include?("rental\"=>true"))
 p.brand = JSON.parse(p.brand.gsub(%r{\ }, '').gsub(%r{=>}, ':'))["name"]
 p.retailer = JSON.parse(p.retailer.gsub(%r{\ }, '').gsub(%r{=>}, ':'))["name"]
 p.category = JSON.parse(p.raw_xml.gsub(%r{\ }, '').gsub(%r{=>}, ':'))["categories"][0]["name"]
 p.shopstyle_id = JSON.parse(p.raw_xml.gsub(%r{\ }, '').gsub(%r{=>}, ':'))["id"]
 
-if p.raw_xml.include?("Men's")
-p.gender_male = true
-p.gender_female = false
-elsif p.raw_xml.include?("Women's")
-p.gender_female = true
-p.gender_male = false
-else
-end
 
 filename = "thumbnails/#{p.category}/#{p.shopstyle_id}.jpg"
 if not File.file?(filename)
